@@ -475,7 +475,11 @@ func (c *Client) InspectDLQ(f Flow, limit int) ([]Delivery, error) {
 	}
 	defer ch.Close() //nolint:errcheck
 
+	// Deliveries stay unacked during the peek — an immediate per-message
+	// nack(requeue) would put the message back at the head and make this
+	// loop read it again. One batched nack at the end requeues everything.
 	var out []Delivery
+	var lastTag uint64
 	for i := 0; i < limit; i++ {
 		d, ok, err := ch.Get(f.dlq(), false)
 		if err != nil {
@@ -484,13 +488,16 @@ func (c *Client) InspectDLQ(f Flow, limit int) ([]Delivery, error) {
 		if !ok {
 			break
 		}
+		lastTag = d.DeliveryTag
 		out = append(out, Delivery{
 			Body:        d.Body,
 			Attempt:     attemptFrom(d.Headers),
 			Traceparent: stringHeader(d.Headers, constants.HeaderTraceparent),
 			EventID:     stringHeader(d.Headers, constants.HeaderEventID),
 		})
-		_ = d.Nack(false, true) // put it back
+	}
+	if lastTag > 0 {
+		_ = ch.Nack(lastTag, true, true) // multiple=true: requeue the whole peek
 	}
 	return out, nil
 }

@@ -125,7 +125,7 @@ func (s *Store) Stats(ctx context.Context) (entity.AuditStats, error) {
 func (s *Store) EnsurePartitions(ctx context.Context, ahead int) error {
 	for i := 0; i <= ahead; i++ {
 		if _, err := s.pool.Exec(ctx,
-			"SELECT ensure_audit_partition(now()::date + $1)", i); err != nil {
+			"SELECT ensure_audit_partition(now()::date + $1::int)", i); err != nil {
 			return fmt.Errorf("ensure partition +%d: %w", i, err)
 		}
 	}
