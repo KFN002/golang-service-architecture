@@ -306,6 +306,17 @@ deploy/                      ← docker-compose · Dockerfiles · config/ (nginx
 - **Supply chain**: gosec on every lint, govulncheck against the Go vuln DB, pinned tool versions, codegen drift checks
 - SQL injection impossible by construction: 100 % sqlc parameterized queries; the audit store physically cannot `UPDATE` or `DELETE`
 
+## 📚 The skills library
+
+The repo doubles as a curriculum: [`skills/`](skills/README.md) holds nine deep SKILL.md
+teaching documents — [architecture](skills/golang-architecture/SKILL.md) ·
+[concurrency](skills/concurrency/SKILL.md) · [fault-tolerance](skills/fault-tolerance/SKILL.md) ·
+[highload](skills/highload/SKILL.md) · [messaging](skills/messaging/SKILL.md) ·
+[observability](skills/observability/SKILL.md) · [security](skills/security/SKILL.md) ·
+[frontend](skills/frontend/SKILL.md) · [testing](skills/testing/SKILL.md) — each grounded in
+this repo's real code, the bugs we actually hit, decision tables, anti-pattern galleries,
+and PR checklists. Agent-skills-compatible frontmatter, so AI coding agents can load them too.
+
 ## 🎓 The guided tour
 
 The dashboard's [`/tour`](http://localhost/tour) walks through all nine steps — from *"the click is the
