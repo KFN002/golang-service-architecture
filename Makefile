@@ -1,5 +1,8 @@
 # ============================================================================
 # perfect-go-service — developer entrypoint.
+# Layout: backend/ (Go module, build/ holds its tool configs)
+#         frontend/ (Next.js) · deploy/ (compose, Dockerfiles, config/ infra confs)
+#         .github/workflows (CI, fixed path)
 # CI runs these exact targets; `make help` lists everything.
 # ============================================================================
 
@@ -22,78 +25,78 @@ COMPOSE := docker compose -f deploy/docker-compose.yml
 
 .PHONY: proto-gen
 proto-gen: ## Regenerate gRPC/gateway/vtproto/OpenAPI code from protos
-	@mkdir -p bin
-	@GOBIN=$(PWD)/bin go install \
+	@mkdir -p backend/bin
+	@cd backend && GOBIN=$(PWD)/backend/bin go install \
 		google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.10
-	@GOBIN=$(PWD)/bin go install \
+	@cd backend && GOBIN=$(PWD)/backend/bin go install \
 		google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.5.1
-	@GOBIN=$(PWD)/bin go install \
+	@cd backend && GOBIN=$(PWD)/backend/bin go install \
 		github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.29.0 \
 		github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.29.0
-	@GOBIN=$(PWD)/bin go install \
+	@cd backend && GOBIN=$(PWD)/backend/bin go install \
 		github.com/planetscale/vtprotobuf/cmd/protoc-gen-go-vtproto@v0.6.0
-	$(BUF) lint
-	$(BUF) generate
+	cd backend && $(BUF) lint --config build/buf.yaml
+	cd backend && $(BUF) generate --config build/buf.yaml --template build/buf.gen.yaml
 
 .PHONY: sqlc-gen
 sqlc-gen: ## Regenerate typed queries for both databases
-	$(SQLC) generate
+	$(SQLC) -f backend/build/sqlc.yaml generate
 
 .PHONY: generate
 generate: proto-gen sqlc-gen ## Regenerate everything
 
 .PHONY: generate-check
 generate-check: generate ## CI drift check: fail if generated code was stale
-	@git diff --exit-code --stat gen/ internal/repo/persistent/sqlcgen/ internal/repo/auditstore/sqlcgen/ \
+	@git diff --exit-code --stat backend/gen/ backend/internal/repo/persistent/sqlcgen/ backend/internal/repo/auditstore/sqlcgen/ \
 		|| (echo "✖ generated code is stale — run 'make generate' and commit" && exit 1)
 
 ## ---- database --------------------------------------------------------------
 
 .PHONY: migrate-up
 migrate-up: ## Apply main DB migrations
-	$(GOOSE) -dir db/main/migrations postgres "$(PG_DSN)" up
+	$(GOOSE) -dir backend/db/main/migrations postgres "$(PG_DSN)" up
 
 .PHONY: migrate-down
 migrate-down: ## Roll back one main DB migration
-	$(GOOSE) -dir db/main/migrations postgres "$(PG_DSN)" down
+	$(GOOSE) -dir backend/db/main/migrations postgres "$(PG_DSN)" down
 
 .PHONY: migrate-status
 migrate-status: ## Migration status, main DB
-	$(GOOSE) -dir db/main/migrations postgres "$(PG_DSN)" status
+	$(GOOSE) -dir backend/db/main/migrations postgres "$(PG_DSN)" status
 
 .PHONY: audit-migrate-up
 audit-migrate-up: ## Apply audit DB migrations
-	$(GOOSE) -dir db/audit/migrations postgres "$(AUDIT_PG_DSN)" up
+	$(GOOSE) -dir backend/db/audit/migrations postgres "$(AUDIT_PG_DSN)" up
 
 .PHONY: audit-migrate-status
 audit-migrate-status: ## Migration status, audit DB
-	$(GOOSE) -dir db/audit/migrations postgres "$(AUDIT_PG_DSN)" status
+	$(GOOSE) -dir backend/db/audit/migrations postgres "$(AUDIT_PG_DSN)" status
 
 ## ---- quality ---------------------------------------------------------------
 
 .PHONY: fmt
 fmt: ## Format Go code
-	gofmt -w $$(find . -name '*.go' -not -path './gen/*' -not -path './web/*' -not -name '*.sql.go')
+	cd backend && gofmt -w $$(find . -name '*.go' -not -path './gen/*' -not -path '*/sqlcgen/*')
 
 .PHONY: vet
 vet: ## go vet everything
-	go vet ./...
+	cd backend && go vet ./...
 
 .PHONY: lint
-lint: ## golangci-lint (includes gosec)
-	$(LINT) run ./...
+lint: ## golangci-lint, ALL linters (includes gosec)
+	cd backend && $(LINT) run --config build/golangci.yml ./...
 
 .PHONY: vuln
 vuln: ## Scan dependencies for known vulnerabilities
-	$(VULN) ./...
+	cd backend && $(VULN) ./...
 
 .PHONY: test
 test: ## Unit tests with the race detector + coverage
-	go test -race -coverprofile=coverage.out ./pkg/... ./internal/... ./config/...
+	cd backend && go test -race -coverprofile=coverage.out ./pkg/... ./internal/... ./config/...
 
 .PHONY: test-integration
 test-integration: ## Container-backed integration suite (needs Docker)
-	go test -tags integration -race -timeout 20m ./integration/...
+	cd backend && go test -tags integration -race -timeout 20m ./integration/...
 
 .PHONY: test-all
 test-all: test test-integration ## Everything
@@ -116,35 +119,31 @@ logs: ## Tail all service logs
 up-infra: ## Start only the data/telemetry planes (local binary debugging)
 	$(COMPOSE) up -d postgres-main postgres-audit redis-main redis-audit rabbitmq otel-collector jaeger prometheus grafana
 
-.PHONY: scale-agents
-scale-agents: ## Scale agents: make scale-agents N=4
-	$(COMPOSE) up -d --scale agent-1=$(or $(N),2) --no-recreate
-
 .PHONY: run-orchestrator
 run-orchestrator: ## Run the orchestrator locally against up-infra
-	go run ./cmd/orchestrator
+	cd backend && go run ./cmd/orchestrator
 
 .PHONY: run-agent
 run-agent: ## Run one agent locally against up-infra
-	go run ./cmd/agent
+	cd backend && go run ./cmd/agent
 
 .PHONY: run-audit
 run-audit: ## Run the audit service locally against up-infra
-	PG_DSN="$(AUDIT_PG_DSN)" REDIS_ADDR=localhost:6380 go run ./cmd/audit
+	cd backend && PG_DSN="$(AUDIT_PG_DSN)" REDIS_ADDR=localhost:6380 go run ./cmd/audit
 
 .PHONY: web-dev
 web-dev: ## Next.js dev server with API proxying
-	cd web && npm run dev
+	cd frontend && npm run dev
 
 ## ---- misc ------------------------------------------------------------------
 
 .PHONY: build
 build: ## Compile all binaries
-	go build ./...
+	cd backend && go build ./...
 
 .PHONY: clean
 clean: ## Remove build artifacts
-	rm -rf bin coverage.out web/.next
+	rm -rf backend/bin backend/coverage.out frontend/.next
 
 .PHONY: help
 help: ## Show this help

@@ -15,6 +15,9 @@ x-go-service: &go-service
   networks: [backend]
   environment: &go-env
     APP_ENV: prod
+    # Soft memory ceiling below the container limit: the GC works with the
+    # quota instead of discovering it via OOM-kill.
+    GOMEMLIMIT: 224MiB
     LOG_LEVEL: info
     OTEL_ENABLED: "true"
     OTEL_ENDPOINT: otel-collector:4317
@@ -76,7 +79,7 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - orchestrator-1
       - orchestrator-2
@@ -245,7 +248,7 @@ services:
     security_opt: [no-new-privileges:true]
     command: ["--config=/etc/otelcol/config.yaml"]
     volumes:
-      - ./otel/otel-collector.yaml:/etc/otelcol/config.yaml:ro
+      - ./config/otel-collector.yaml:/etc/otelcol/config.yaml:ro
     networks: [telemetry]
     deploy:
       resources:
@@ -267,7 +270,7 @@ services:
     restart: unless-stopped
     security_opt: [no-new-privileges:true]
     volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prom-data:/prometheus
     networks: [telemetry, backend]
     deploy:
@@ -285,8 +288,8 @@ services:
       GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASS:-admin}
     volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./config/grafana/dashboards:/var/lib/grafana/dashboards:ro
     networks: [telemetry]
     deploy:
       resources:

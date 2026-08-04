@@ -1,0 +1,81 @@
+version: "2"
+
+run:
+  timeout: 10m
+  build-tags:
+    - integration
+
+linters:
+  # Everything on. The list below disables only linters that are contradictory
+  # or antithetical to this codebase's documented style — each with a reason.
+  default: all
+  disable:
+    - exhaustruct     # zero-value struct fields are idiomatic (options/config structs)
+    - varnamelen      # i, tc, ok, db are idiomatic Go
+    - mnd             # config defaults/test fixtures are inherently numeric
+    - depguard        # no import allow-list policy for a single-module showcase
+    - ireturn         # usecases intentionally return interfaces (ports, DIP)
+    - wrapcheck       # apperrors.Wrap at boundaries is the policy; blanket wrapping is noise
+    - nlreturn        # whitespace style contradicts wsl
+    - wsl             # deprecated in favor of wsl_v5
+    - wsl_v5          # whitespace style wars — gofmt is the arbiter here
+    - err113          # sentinel + typed errors via apperrors, dynamic messages allowed
+    - gochecknoglobals # AMQP flow definitions and prom collectors are package-level by design
+    - testpackage     # white-box tests are deliberate for internal invariants
+    - paralleltest    # t.Parallel used where safe; not forced everywhere
+    - tparallel       # same rationale as paralleltest
+    - forcetypeassert # generated + adapter code asserts on known-shape values
+    - contextcheck    # graceful-drain paths intentionally use context.Background
+    - noinlineerr     # `if err := f(); err != nil` is idiomatic Go
+    - embeddedstructfieldcheck # proto-embedding (Unimplemented*Server) requires embedding
+
+  settings:
+    lll:
+      line-length: 140
+    funlen:
+      lines: 120
+      statements: 60
+    cyclop:
+      max-complexity: 15
+    gocognit:
+      min-complexity: 25
+    gocyclo:
+      min-complexity: 15
+    nestif:
+      min-complexity: 6
+    tagliatelle:
+      case:
+        rules:
+          json: snake    # wire format is snake_case (matches PG columns + JS clients)
+    revive:
+      rules:
+        - name: exported
+          disabled: false
+    exhaustive:
+      default-signifies-exhaustive: true
+
+  exclusions:
+    rules:
+      # Tests: relaxed on security, error-checking, duplication and length.
+      - path: _test\.go
+        linters:
+          - gosec
+          - errcheck
+          - funlen
+          - dupl
+          - goconst
+          - maintidx
+          - errchkjson
+          - cyclop
+          - gocognit
+          - gocyclo
+      # Generated code is exempt from everything.
+      - path: gen/
+        linters: [all]
+      - path: sqlcgen/
+        linters: [all]
+
+formatters:
+  enable:
+    - gofmt
+    - goimports

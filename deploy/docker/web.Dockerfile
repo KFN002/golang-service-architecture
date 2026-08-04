@@ -3,13 +3,13 @@
 
 FROM node:24-alpine AS deps
 WORKDIR /app
-COPY web/package.json web/package-lock.json ./
+COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci --ignore-scripts
 
 FROM node:24-alpine AS build
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY web/ .
+COPY frontend/ .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 

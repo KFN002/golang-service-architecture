@@ -1,0 +1,10 @@
+# Keep the build context lean: the Go images need source + go.mod/sum;
+# the web image needs frontend/ sources (its own node_modules are restored by npm ci).
+.git
+.idea
+backend/bin
+frontend/node_modules
+frontend/.next
+coverage.out
+docs
+**/.DS_Store

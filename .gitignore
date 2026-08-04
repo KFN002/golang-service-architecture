@@ -3,7 +3,7 @@
 .vscode/
 
 # Binaries & build output
-bin/
+backend/bin/
 dist/
 
 # Env
@@ -11,10 +11,10 @@ dist/
 *.local
 
 # Test artifacts
-coverage.out
+backend/coverage.out
 *.test
 
 # Node
 node_modules/
 .next/
-bin/
+backend/bin/

@@ -87,19 +87,24 @@ small enough to read, and tested:
 ## Repository map
 
 ```
-cmd/{orchestrator,agent,audit}/  thin mains
-config/                          env-first configuration
-internal/entity/                 pure domain (imports nothing)
-internal/usecase/                business logic; owns its ports (interfaces)
-internal/repo/                   PG/Redis adapters (sqlc-generated + hand-written)
-internal/controller/             gRPC, AMQP, Fiber HTTP transports
-internal/app/                    DI wiring + lifecycles + graceful shutdown
-pkg/                             standalone, domain-free libraries — each one pattern
-proto/  gen/                     buf-managed contracts + generated code (drift-checked in CI)
-db/{main,audit}/                 goose migrations + sqlc queries, embedded in binaries
-web/                             Next.js 16 dashboard
-deploy/                          compose, nginx, prometheus, grafana, otel
-integration/                     container-backed tests (the full audit test lives here)
+backend/                         the Go module
+├── cmd/{orchestrator,agent,audit}/  thin mains
+├── build/                       backend tool configs (golangci, sqlc, buf)
+├── config/                      env-first runtime configuration (Go package)
+├── internal/entity/             pure domain (imports nothing)
+├── internal/usecase/            business logic; owns its ports (interfaces)
+├── internal/repo/               PG/Redis adapters (sqlc-generated + hand-written)
+├── internal/controller/         gRPC, AMQP, Fiber HTTP transports
+├── internal/app/                DI wiring + lifecycles + graceful shutdown
+├── pkg/                         standalone, domain-free libraries — each one pattern
+├── proto/  gen/                 buf-managed contracts + generated code (drift-checked)
+├── db/{main,audit}/             goose migrations + sqlc queries, embedded in binaries
+└── integration/                 container-backed tests (the full audit test lives here)
+frontend/                        Next.js 16 dashboard (its build configs must sit at
+                                 the app root — Next.js/TS resolve them there)
+deploy/                          docker-compose, Dockerfiles, config/ (nginx, prometheus,
+                                 grafana, otel-collector)
+.github/workflows/               CI (path fixed by GitHub)
 ```
 
 ## Development
