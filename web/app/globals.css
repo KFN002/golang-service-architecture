@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+/* Dark-first design tokens — the entire dashboard runs on these variables. */
+:root {
+  --background: #0a0a0f;
+  --surface: #12121a;
+  --surface-2: #1a1a26;
+  --border: #26263a;
+  --foreground: #e4e4ef;
+  --muted: #8a8aa3;
+  --accent: #7c6cf6;
+  --accent-soft: rgba(124, 108, 246, 0.14);
+  --ok: #34d399;
+  --warn: #fbbf24;
+  --err: #f87171;
+  --run: #f59e0b;
+  --cyan: #22d3ee;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border-c: var(--border);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-err: var(--err);
+  --color-run: var(--run);
+  --color-cyan-c: var(--cyan);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-feature-settings: "tnum";
+}
+
+/* Running tasks pulse on the DAG. */
+@keyframes pulse-glow {
+  0%, 100% { filter: drop-shadow(0 0 2px var(--run)); }
+  50% { filter: drop-shadow(0 0 10px var(--run)); }
+}
+.task-running { animation: pulse-glow 1.2s ease-in-out infinite; }
+
+/* Edge draw-in when a dependency unlocks. */
+@keyframes dash-in {
+  from { stroke-dashoffset: 60; }
+  to { stroke-dashoffset: 0; }
+}
+.edge-live { stroke-dasharray: 60; animation: dash-in 0.6s ease-out forwards; }
+
+::selection { background: var(--accent-soft); }
+
+/* Slim scrollbars for the dark theme. */
+* { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
