@@ -52,19 +52,19 @@ type Agent struct {
 // Audit is the audit service configuration.
 type Audit struct {
 	Common
-	HTTPPort     int
-	GRPCPort     int
-	PGDSN        string
-	RedisAddr    string
-	RabbitURL    string
-	BatchMaxSize int
-	BatchMaxWait time.Duration
-	IngestBulk   int // AMQP ingestion bulkhead capacity
-	WriteBulk    int // gRPC write bulkhead capacity
-	Prefetch     int
-	RateRPS      float64
-	RateBurst    float64
-	QueryTTL     time.Duration
+	HTTPPort        int
+	GRPCPort        int
+	PGDSN           string
+	RedisAddr       string
+	RabbitURL       string
+	BatchMaxSize    int
+	BatchMaxWait    time.Duration
+	IngestBulk      int // AMQP ingestion bulkhead capacity
+	WriteBulk       int // gRPC write bulkhead capacity
+	Prefetch        int
+	RateRPS         float64
+	RateBurst       float64
+	QueryTTL        time.Duration
 	PartitionsAhead int
 }
 

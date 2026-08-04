@@ -1,0 +1,75 @@
+{
+  "title": "Distributed Calculator",
+  "uid": "calc-main",
+  "timezone": "browser",
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Worker pool size (per agent)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "calc_pool_workers", "legendFormat": "{{instance_id}} workers" },
+        { "expr": "calc_pool_busy", "legendFormat": "{{instance_id}} busy" }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Pool backlog",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "calc_pool_backlog", "legendFormat": "{{instance_id}}" }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Tasks completed /s",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "rate(calc_pool_done_total[1m])", "legendFormat": "{{instance_id}}" }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "SSE clients",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 8, "w": 6, "h": 8 },
+      "targets": [{ "expr": "sum(calc_sse_clients)" }]
+    },
+    {
+      "id": 5,
+      "title": "Audit ingest /s",
+      "type": "timeseries",
+      "gridPos": { "x": 18, "y": 8, "w": 6, "h": 8 },
+      "targets": [
+        { "expr": "rate(audit_flushed_total[1m])", "legendFormat": "flushed" },
+        { "expr": "rate(audit_deduplicated_total[1m])", "legendFormat": "deduped" }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Audit pipeline backlog",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "audit_backlog", "legendFormat": "buffered" },
+        { "expr": "audit_ingest_in_flight", "legendFormat": "bulkhead in-flight" }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Load shed + flush errors",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "rate(audit_ingest_rejected_total[1m])", "legendFormat": "shed" },
+        { "expr": "rate(audit_flush_errors_total[1m])", "legendFormat": "flush errors" }
+      ]
+    }
+  ],
+  "schemaVersion": 39
+}

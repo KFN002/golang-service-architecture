@@ -50,6 +50,7 @@ func Do(ctx context.Context, cfg Config, fn func(ctx context.Context) error) err
 		if ceiling > cfg.Cap {
 			ceiling = cfg.Cap
 		}
+		// #nosec G404 -- jitter needs speed, not cryptographic randomness.
 		delay := time.Duration(rand.Int64N(int64(ceiling) + 1))
 		select {
 		case <-time.After(delay):

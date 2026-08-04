@@ -1,0 +1,30 @@
+version: "2"
+
+run:
+  timeout: 5m
+  build-tags:
+    - integration
+
+linters:
+  default: standard
+  enable:
+    - gosec        # security scanning in every lint run
+    - bodyclose
+    - misspell
+    - unconvert
+    - copyloopvar
+    - errname
+    - nilerr
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters: [gosec, errcheck]
+      - path: gen/
+        linters: [all]
+      - path: sqlcgen/
+        linters: [all]
+
+formatters:
+  enable:
+    - gofmt
+    - goimports

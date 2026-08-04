@@ -81,7 +81,7 @@ func (h *SSEHub) Handler(c fiber.Ctx) error {
 	return c.SendStreamWriter(func(w *bufio.Writer) {
 		defer h.unsubscribe(id)
 		// Initial comment establishes the stream through proxies.
-		fmt.Fprint(w, ": connected\n\n")
+		_, _ = fmt.Fprint(w, ": connected\n\n")
 		_ = w.Flush()
 
 		for {
@@ -92,7 +92,7 @@ func (h *SSEHub) Handler(c fiber.Ctx) error {
 				if filter != "" && !eventMatches(data, filter) {
 					continue
 				}
-				fmt.Fprintf(w, "data: %s\n\n", data)
+				_, _ = fmt.Fprintf(w, "data: %s\n\n", data)
 				if err := w.Flush(); err != nil {
 					return // client went away
 				}
@@ -113,7 +113,7 @@ func eventMatches(data []byte, exprID string) bool {
 func (h *SSEHub) RunRedisBridge(ctx context.Context, subscribe func(ctx context.Context, channel string, fn func(payload string)) error, channel string) error {
 	err := subscribe(ctx, channel, h.Broadcast)
 	if ctx.Err() != nil {
-		return nil // clean shutdown
+		return nil //nolint:nilerr // context cancellation IS the clean shutdown path
 	}
 	return err
 }

@@ -22,12 +22,21 @@ type Config struct {
 	ScaleEvery  time.Duration // how often the autoscaler evaluates backlog
 }
 
+// maxPoolSize bounds configuration so int32 counters can never overflow.
+const maxPoolSize = 1 << 20
+
 func (c *Config) defaults() {
 	if c.Min <= 0 {
 		c.Min = 1
 	}
+	if c.Min > maxPoolSize {
+		c.Min = maxPoolSize
+	}
 	if c.Max < c.Min {
 		c.Max = c.Min
+	}
+	if c.Max > maxPoolSize {
+		c.Max = maxPoolSize
 	}
 	if c.QueueSize <= 0 {
 		c.QueueSize = 64
@@ -49,6 +58,8 @@ type OnScale func(from, to int32, reason string)
 // Pool is the auto-scaling worker pool.
 type Pool struct {
 	cfg     Config
+	min32   int32 // cfg.Min, pre-clamped (see maxPoolSize)
+	max32   int32 // cfg.Max, pre-clamped
 	queue   chan Task
 	workers atomic.Int32
 	busy    atomic.Int32
@@ -68,6 +79,8 @@ func New(cfg Config, onScale OnScale) *Pool {
 	ctx, cancel := context.WithCancel(context.Background())
 	p := &Pool{
 		cfg:     cfg,
+		min32:   int32(cfg.Min), // #nosec G115 -- clamped to maxPoolSize in defaults
+		max32:   int32(cfg.Max), // #nosec G115 -- clamped to maxPoolSize in defaults
 		queue:   make(chan Task, cfg.QueueSize),
 		onScale: onScale,
 		ctx:     ctx,
@@ -155,7 +168,7 @@ func (p *Pool) spawn(transient bool) {
 					idle.Reset(p.cfg.IdleTimeout)
 				}
 			case <-idle.C:
-				if transient && p.workers.Load() > int32(p.cfg.Min) {
+				if transient && p.workers.Load() > p.min32 {
 					to := p.workers.Add(-1)
 					p.notify(to+1, to, "idle")
 					return
@@ -191,11 +204,11 @@ func (p *Pool) autoscale() {
 		case <-ticker.C:
 			backlog := len(p.queue)
 			workers := p.workers.Load()
-			if backlog > 0 && workers < int32(p.cfg.Max) {
+			if backlog > 0 && workers < p.max32 {
 				p.scaleMu.Lock()
 				// Re-check under lock; grow proportionally to backlog.
 				grow := backlog/2 + 1
-				for i := 0; i < grow && p.workers.Load() < int32(p.cfg.Max); i++ {
+				for i := 0; i < grow && p.workers.Load() < p.max32; i++ {
 					p.spawn(true)
 				}
 				p.scaleMu.Unlock()

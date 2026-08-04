@@ -42,13 +42,13 @@ type AppConfig struct {
 // newApp builds the base Fiber app with the shared hardening stack.
 func newApp(cfg AppConfig) *fiber.App {
 	app := fiber.New(fiber.Config{
-		AppName:               cfg.ServiceName,
-		ReadTimeout:           constants.DefaultHTTPReadTimeout,
-		WriteTimeout:          constants.DefaultHTTPWriteTimeout,
-		IdleTimeout:           constants.DefaultHTTPIdleTimeout,
-		BodyLimit:   constants.MaxBodyBytes,
-		JSONEncoder: jsonx.Marshal,
-		JSONDecoder: jsonx.Unmarshal,
+		AppName:      cfg.ServiceName,
+		ReadTimeout:  constants.DefaultHTTPReadTimeout,
+		WriteTimeout: constants.DefaultHTTPWriteTimeout,
+		IdleTimeout:  constants.DefaultHTTPIdleTimeout,
+		BodyLimit:    constants.MaxBodyBytes,
+		JSONEncoder:  jsonx.Marshal,
+		JSONDecoder:  jsonx.Unmarshal,
 	})
 
 	app.Use(recover.New())

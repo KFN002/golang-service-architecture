@@ -65,7 +65,7 @@ func (s *Store) InsertBatch(ctx context.Context, events []entity.AuditEvent) (in
 
 // Query pages the log with keyset cursors.
 func (s *Store) Query(ctx context.Context, f entity.AuditFilter) ([]entity.AuditEvent, error) {
-	p := sqlcgen.QueryAuditEventsParams{PageSize: int32(f.Limit)}
+	p := sqlcgen.QueryAuditEventsParams{PageSize: int32(min(f.Limit, 1000))} // #nosec G115 -- min-clamped
 	if !f.From.IsZero() {
 		p.FromTs = &f.From
 	}

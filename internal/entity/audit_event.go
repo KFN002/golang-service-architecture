@@ -53,7 +53,7 @@ type AuditFilter struct {
 
 // AuditStats is an aggregate view for dashboards.
 type AuditStats struct {
-	Total   int64
-	ByType  map[string]int64
+	Total    int64
+	ByType   map[string]int64
 	Ingest1m int64
 }

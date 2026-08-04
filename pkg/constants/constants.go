@@ -45,9 +45,9 @@ const (
 // Redis channels and key prefixes.
 const (
 	EventsChannel      = "calc:events"
-	ExpressionCacheKey = "calc:expr:"    // + expression id
-	AuditDedupKey      = "audit:dedup:"  // + event id
-	AuditQueryCacheKey = "audit:query:"  // + query hash
+	ExpressionCacheKey = "calc:expr:"   // + expression id
+	AuditDedupKey      = "audit:dedup:" // + event id
+	AuditQueryCacheKey = "audit:query:" // + query hash
 )
 
 // Limits and defaults that guard the public surface (security hardening).

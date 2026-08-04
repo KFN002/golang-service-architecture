@@ -103,8 +103,9 @@ func (a *AgentConsumer) handle(ctx context.Context, d rabbitmq.Delivery) error {
 	}
 	task.Attempt = d.Attempt
 
-	// Lifecycle: tell the orchestrator the task is running (best effort).
-	a.publishResult(ctx, messages.ResultMessage{
+	// Lifecycle: tell the orchestrator the task is running. Best effort by
+	// design — a lost "started" ping costs a UI transition, nothing else.
+	_ = a.publishResult(ctx, messages.ResultMessage{
 		Kind: messages.ResultStarted, TaskID: task.TaskID,
 		ExpressionID: task.ExpressionID, WorkerID: a.computer.WorkerID(),
 		Attempt: task.Attempt,

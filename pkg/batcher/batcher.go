@@ -18,8 +18,8 @@ type Flush[T any] func(ctx context.Context, batch []T) error
 
 // Config tunes the batcher.
 type Config struct {
-	MaxSize  int           // flush when the active buffer reaches this size
-	MaxWait  time.Duration // ... or when this much time has passed
+	MaxSize int           // flush when the active buffer reaches this size
+	MaxWait time.Duration // ... or when this much time has passed
 }
 
 func (c *Config) defaults() {

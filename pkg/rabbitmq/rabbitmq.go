@@ -203,7 +203,11 @@ type Message struct {
 }
 
 func (m Message) headers() amqp.Table {
-	t := amqp.Table{constants.HeaderAttempt: int32(m.Attempt)}
+	attempt := m.Attempt
+	if attempt > 1<<30 {
+		attempt = 1 << 30 // attempts are single digits; guard the narrowing anyway
+	}
+	t := amqp.Table{constants.HeaderAttempt: int32(attempt)} //nolint:gosec // clamped above
 	if m.Traceparent != "" {
 		t[constants.HeaderTraceparent] = m.Traceparent
 	}
@@ -352,7 +356,7 @@ func (c *Client) Consume(ctx context.Context, cfg ConsumeConfig, pub *Publisher,
 	for {
 		if err := c.consumeOnce(ctx, cfg, pub, handler); err != nil {
 			if ctx.Err() != nil {
-				return nil
+				return nil //nolint:nilerr // cancellation is the clean-shutdown path
 			}
 			c.log.Warn("consumer channel lost, restarting",
 				zap.String("queue", cfg.Flow.Queue), zap.Error(err))

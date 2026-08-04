@@ -111,6 +111,18 @@ func (s *Server) WatchExpression(req *calcv1.GetExpressionRequest, stream calcv1
 
 // ---- mapping ---------------------------------------------------------------
 
+// i32 clamps an int into int32 range (values here are counts ≤ MaxTasksPerExpr,
+// but gosec rightly demands the conversion be provably safe).
+func i32(n int) int32 {
+	if n > 1<<31-1 {
+		return 1<<31 - 1
+	}
+	if n < -(1 << 31) {
+		return -(1 << 31)
+	}
+	return int32(n)
+}
+
 func toProto(e *entity.Expression, p entity.Progress) *calcv1.Expression {
 	out := &calcv1.Expression{
 		Id:        e.ID.String(),
@@ -119,7 +131,7 @@ func toProto(e *entity.Expression, p entity.Progress) *calcv1.Expression {
 		Error:     e.Error,
 		TraceId:   e.TraceID,
 		CreatedAt: timestamppb.New(e.CreatedAt),
-		Progress:  &calcv1.Progress{Total: int32(p.Total), Done: int32(p.Done)},
+		Progress:  &calcv1.Progress{Total: i32(p.Total), Done: i32(p.Done)},
 	}
 	if e.Result != nil {
 		out.HasResult = true
@@ -169,7 +181,7 @@ func taskToProto(t *entity.Task) *calcv1.TaskNode {
 		Op:       t.Op,
 		Status:   taskStatusToProto(t.Status),
 		WorkerId: t.WorkerID,
-		Attempt:  int32(t.Attempt),
+		Attempt:  i32(t.Attempt),
 		IsRoot:   t.IsRoot,
 	}
 	if t.Arg1Value != nil {

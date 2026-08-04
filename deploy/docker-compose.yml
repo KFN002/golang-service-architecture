@@ -1,0 +1,305 @@
+# The full stack: nginx → 3× orchestrator + 2× agent + 2× audit,
+# 2× PostgreSQL 18, 2× Redis 8, RabbitMQ 4, otel-collector, Jaeger v2,
+# Prometheus, Grafana, and the Next.js dashboard.
+#
+# Networks are segmented: only nginx faces the host; data stores sit on
+# private networks; telemetry flows on its own plane.
+
+name: perfect-go-service
+
+x-go-service: &go-service
+  restart: unless-stopped
+  security_opt:
+    - no-new-privileges:true
+  read_only: true
+  networks: [backend]
+  environment: &go-env
+    APP_ENV: prod
+    LOG_LEVEL: info
+    OTEL_ENABLED: "true"
+    OTEL_ENDPOINT: otel-collector:4317
+    RABBIT_URL: amqp://${RABBIT_USER:-calc}:${RABBIT_PASS:-calcpass}@rabbitmq:5672/
+
+x-orchestrator: &orchestrator
+  <<: *go-service
+  build:
+    context: ..
+    dockerfile: deploy/docker/go.Dockerfile
+    args: { SERVICE: orchestrator }
+  image: perfect-go/orchestrator:latest
+  depends_on:
+    postgres-main: { condition: service_healthy }
+    redis-main: { condition: service_started }
+    rabbitmq: { condition: service_healthy }
+  environment: &orchestrator-env
+    <<: *go-env
+    PG_DSN: postgres://${PG_USER:-calc}:${PG_PASS:-calcpass}@postgres-main:5432/calc?sslmode=disable
+    REDIS_ADDR: redis-main:6379
+  deploy: &small-limits
+    resources:
+      limits: { cpus: "1.0", memory: 256M }
+
+x-agent: &agent
+  <<: *go-service
+  build:
+    context: ..
+    dockerfile: deploy/docker/go.Dockerfile
+    args: { SERVICE: agent }
+  image: perfect-go/agent:latest
+  depends_on:
+    rabbitmq: { condition: service_healthy }
+  deploy: *small-limits
+
+x-audit: &audit
+  <<: *go-service
+  build:
+    context: ..
+    dockerfile: deploy/docker/go.Dockerfile
+    args: { SERVICE: audit }
+  image: perfect-go/audit:latest
+  depends_on:
+    postgres-audit: { condition: service_healthy }
+    redis-audit: { condition: service_started }
+    rabbitmq: { condition: service_healthy }
+  environment: &audit-env
+    <<: *go-env
+    PG_DSN: postgres://${AUDIT_PG_USER:-audit}:${AUDIT_PG_PASS:-auditpass}@postgres-audit:5432/audit?sslmode=disable
+    REDIS_ADDR: redis-audit:6379
+  deploy: *small-limits
+
+services:
+  # ---- edge ---------------------------------------------------------------
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - orchestrator-1
+      - orchestrator-2
+      - orchestrator-3
+      - audit-1
+      - audit-2
+      - web
+    networks: [edge, backend, telemetry]
+
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/docker/web.Dockerfile
+    image: perfect-go/web:latest
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_SERVICE_NAME: web
+    networks: [backend, telemetry]
+    deploy:
+      resources:
+        limits: { cpus: "1.0", memory: 512M }
+
+  # ---- application replicas ----------------------------------------------
+  orchestrator-1:
+    <<: *orchestrator
+    environment:
+      <<: *orchestrator-env
+      INSTANCE_ID: orchestrator-1
+    networks: [backend, telemetry]
+
+  orchestrator-2:
+    <<: *orchestrator
+    environment:
+      <<: *orchestrator-env
+      INSTANCE_ID: orchestrator-2
+    networks: [backend, telemetry]
+
+  orchestrator-3:
+    <<: *orchestrator
+    environment:
+      <<: *orchestrator-env
+      INSTANCE_ID: orchestrator-3
+    networks: [backend, telemetry]
+
+  agent-1:
+    <<: *agent
+    environment:
+      <<: *go-env
+      INSTANCE_ID: agent-1
+      POOL_MIN: "2"
+      POOL_MAX: "24"
+    networks: [backend, telemetry]
+
+  agent-2:
+    <<: *agent
+    environment:
+      <<: *go-env
+      INSTANCE_ID: agent-2
+      POOL_MIN: "2"
+      POOL_MAX: "24"
+    networks: [backend, telemetry]
+
+  audit-1:
+    <<: *audit
+    environment:
+      <<: *audit-env
+      INSTANCE_ID: audit-1
+    networks: [backend, telemetry]
+
+  audit-2:
+    <<: *audit
+    environment:
+      <<: *audit-env
+      INSTANCE_ID: audit-2
+    networks: [backend, telemetry]
+
+  # ---- data plane ---------------------------------------------------------
+  postgres-main:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    environment:
+      POSTGRES_USER: ${PG_USER:-calc}
+      POSTGRES_PASSWORD: ${PG_PASS:-calcpass}
+      POSTGRES_DB: calc
+    volumes:
+      - pg-main-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER:-calc} -d calc"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [backend]
+    deploy:
+      resources:
+        limits: { cpus: "2.0", memory: 512M }
+
+  postgres-audit:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    environment:
+      POSTGRES_USER: ${AUDIT_PG_USER:-audit}
+      POSTGRES_PASSWORD: ${AUDIT_PG_PASS:-auditpass}
+      POSTGRES_DB: audit
+    volumes:
+      - pg-audit-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${AUDIT_PG_USER:-audit} -d audit"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [backend]
+    deploy:
+      resources:
+        limits: { cpus: "2.0", memory: 512M }
+
+  redis-main:
+    image: redis:8-alpine
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    command: ["redis-server", "--appendonly", "no", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
+    networks: [backend]
+    deploy:
+      resources:
+        limits: { cpus: "0.5", memory: 160M }
+
+  redis-audit:
+    image: redis:8-alpine
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    command: ["redis-server", "--appendonly", "no", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
+    networks: [backend]
+    deploy:
+      resources:
+        limits: { cpus: "0.5", memory: 160M }
+
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBIT_USER:-calc}
+      RABBITMQ_DEFAULT_PASS: ${RABBIT_PASS:-calcpass}
+    ports:
+      - "127.0.0.1:15672:15672"   # management UI, localhost only
+    volumes:
+      - rabbit-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [backend]
+    deploy:
+      resources:
+        limits: { cpus: "1.0", memory: 512M }
+
+  # ---- telemetry plane ----------------------------------------------------
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./otel/otel-collector.yaml:/etc/otelcol/config.yaml:ro
+    networks: [telemetry]
+    deploy:
+      resources:
+        limits: { cpus: "0.5", memory: 320M }
+
+  jaeger:
+    image: jaegertracing/jaeger:2.9.0
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    ports:
+      - "127.0.0.1:16686:16686"   # UI, localhost only
+    networks: [telemetry]
+    deploy:
+      resources:
+        limits: { cpus: "0.5", memory: 512M }
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prom-data:/prometheus
+    networks: [telemetry, backend]
+    deploy:
+      resources:
+        limits: { cpus: "0.5", memory: 512M }
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    ports:
+      - "127.0.0.1:3001:3000"     # UI, localhost only
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASS:-admin}
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks: [telemetry]
+    deploy:
+      resources:
+        limits: { cpus: "0.5", memory: 256M }
+
+networks:
+  edge:
+  backend:
+    internal: false
+  telemetry:
+
+volumes:
+  pg-main-data:
+  pg-audit-data:
+  rabbit-data:
+  prom-data:

@@ -56,7 +56,7 @@ func (r *Repo) CreateExpression(ctx context.Context, expr *entity.Expression, ta
 				Arg1TaskID:   t.Arg1TaskID,
 				Arg2Value:    t.Arg2Value,
 				Arg2TaskID:   t.Arg2TaskID,
-				UnmetDeps:    int32(t.UnmetDeps),
+				UnmetDeps:    int32(min(t.UnmetDeps, 2)), // #nosec G115 -- binary ops have ≤2 deps
 				Status:       sqlcgen.TaskStatusPending,
 				IsRoot:       t.IsRoot,
 			}); err != nil {
@@ -111,7 +111,7 @@ func (r *Repo) GetExpression(ctx context.Context, id uuid.UUID) (*entity.Express
 // ListExpressions pages newest-first.
 func (r *Repo) ListExpressions(ctx context.Context, limit, offset int) ([]*entity.Expression, int64, error) {
 	rows, err := r.q.ListExpressions(ctx, sqlcgen.ListExpressionsParams{
-		Limit: int32(limit), Offset: int32(offset),
+		Limit: int32(min(limit, 1000)), Offset: int32(min(offset, 1<<30)), // #nosec G115 -- min-clamped
 	})
 	if err != nil {
 		return nil, 0, err
@@ -157,7 +157,7 @@ func (r *Repo) GetProgress(ctx context.Context, exprID uuid.UUID) (entity.Progre
 func (r *Repo) RelayOutbox(ctx context.Context, limit int, publish func([]scheduler.OutboxEntry) []int64) (int, error) {
 	var relayed int
 	err := r.inTx(ctx, func(q *sqlcgen.Queries) error {
-		rows, err := q.SelectOutboxBatch(ctx, int32(limit))
+		rows, err := q.SelectOutboxBatch(ctx, int32(min(limit, 4096))) //nolint:gosec // min-clamped
 		if err != nil {
 			return err
 		}
@@ -181,7 +181,8 @@ func (r *Repo) RelayOutbox(ctx context.Context, limit int, publish func([]schedu
 // ApplyStarted marks a task running.
 func (r *Repo) ApplyStarted(ctx context.Context, taskID uuid.UUID, workerID string, attempt int) error {
 	return r.q.MarkTaskRunning(ctx, sqlcgen.MarkTaskRunningParams{
-		ID: taskID, WorkerID: workerID, Attempt: int32(attempt),
+		ID: taskID, WorkerID: workerID,
+		Attempt: int32(min(attempt, 1<<20)), //nolint:gosec // min-clamped
 	})
 }
 

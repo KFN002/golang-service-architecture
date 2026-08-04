@@ -60,8 +60,9 @@ func (s *Server) WriteEvents(ctx context.Context, req *auditv1.WriteEventsReques
 			}
 		}
 		after := s.ingest.Stats()
-		resp.Accepted = int32(after.Accepted - before.Accepted)
-		resp.Deduplicated = int32(after.Deduplicated - before.Deduplicated)
+		// Deltas are bounded by MaxAuditBatch (≤1000) — safe narrowing.
+		resp.Accepted = int32(min(after.Accepted-before.Accepted, int64(constants.MaxAuditBatch)))             // #nosec G115 -- min-clamped
+		resp.Deduplicated = int32(min(after.Deduplicated-before.Deduplicated, int64(constants.MaxAuditBatch))) // #nosec G115 -- min-clamped
 		return nil
 	})
 	if err != nil {

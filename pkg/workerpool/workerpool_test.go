@@ -65,10 +65,7 @@ func TestPoolScalesDownWhenIdle(t *testing.T) {
 	close(block)
 
 	deadline := time.After(2 * time.Second)
-	for {
-		if p.Stats().Workers == 1 {
-			break
-		}
+	for p.Stats().Workers != 1 {
 		select {
 		case <-deadline:
 			t.Fatalf("did not scale down to Min, workers=%d", p.Stats().Workers)

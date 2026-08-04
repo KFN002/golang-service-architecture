@@ -45,15 +45,24 @@ type Config struct {
 	HalfOpenProbes   int           // successes needed to close from HalfOpen
 }
 
+// maxThreshold bounds config so int32 counters can never overflow.
+const maxThreshold = 1 << 20
+
 func (c *Config) defaults() {
 	if c.FailureThreshold <= 0 {
 		c.FailureThreshold = 5
+	}
+	if c.FailureThreshold > maxThreshold {
+		c.FailureThreshold = maxThreshold
 	}
 	if c.Cooldown <= 0 {
 		c.Cooldown = 5 * time.Second
 	}
 	if c.HalfOpenProbes <= 0 {
 		c.HalfOpenProbes = 2
+	}
+	if c.HalfOpenProbes > maxThreshold {
+		c.HalfOpenProbes = maxThreshold
 	}
 }
 
@@ -98,7 +107,7 @@ func (b *Breaker) Do(ctx context.Context, fn func(ctx context.Context) error) er
 		return apperrors.Newf(apperrors.CodeUnavailable, "circuit %q open", b.name)
 	case HalfOpen:
 		// Admit only a bounded number of concurrent probes.
-		if b.probes.Add(1) > int32(b.cfg.HalfOpenProbes) {
+		if b.probes.Add(1) > int32(b.cfg.HalfOpenProbes) { //nolint:gosec // clamped in defaults
 			b.probes.Add(-1)
 			return apperrors.Newf(apperrors.CodeUnavailable, "circuit %q probing", b.name)
 		}
@@ -114,7 +123,7 @@ func (b *Breaker) record(err error) {
 	if err == nil {
 		switch State(b.state.Load()) {
 		case HalfOpen:
-			if b.successes.Add(1) >= int32(b.cfg.HalfOpenProbes) {
+			if b.successes.Add(1) >= int32(b.cfg.HalfOpenProbes) { //nolint:gosec // clamped in defaults
 				b.transition(HalfOpen, Closed)
 			}
 		default:
@@ -126,7 +135,7 @@ func (b *Breaker) record(err error) {
 	case HalfOpen:
 		b.transition(HalfOpen, Open)
 	case Closed:
-		if b.failures.Add(1) >= int32(b.cfg.FailureThreshold) {
+		if b.failures.Add(1) >= int32(b.cfg.FailureThreshold) { //nolint:gosec // clamped in defaults
 			b.transition(Closed, Open)
 		}
 	}

@@ -26,15 +26,15 @@ func TestValidateExpression(t *testing.T) {
 	}
 
 	invalid := map[string]string{
-		"":                        "empty",
-		"   ":                     "whitespace only",
-		"1 + a":                   "illegal character",
-		"1; DROP TABLE tasks":     "injection attempt",
-		"(1 + 2":                  "unbalanced open",
-		"1 + 2)":                  "unbalanced close",
-		"1 +":                     "trailing operator",
-		"+* 2":                    "operator run",
-		"()":                      "no numbers",
+		"":                              "empty",
+		"   ":                           "whitespace only",
+		"1 + a":                         "illegal character",
+		"1; DROP TABLE tasks":           "injection attempt",
+		"(1 + 2":                        "unbalanced open",
+		"1 + 2)":                        "unbalanced close",
+		"1 +":                           "trailing operator",
+		"+* 2":                          "operator run",
+		"()":                            "no numbers",
 		strings.Repeat("1+", 300) + "1": "too long",
 		strings.Repeat("(", 70) + "1" + strings.Repeat(")", 70): "too deep",
 	}

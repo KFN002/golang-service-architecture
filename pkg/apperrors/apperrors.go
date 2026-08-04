@@ -15,14 +15,14 @@ import (
 type Code string
 
 const (
-	CodeInvalidInput  Code = "INVALID_INPUT"   // validation failed; caller's fault
-	CodeNotFound      Code = "NOT_FOUND"       // entity does not exist
-	CodeConflict      Code = "CONFLICT"        // duplicate / concurrent modification
-	CodeUnavailable   Code = "UNAVAILABLE"     // dependency down, breaker open
-	CodeRateLimited   Code = "RATE_LIMITED"    // throttled; retry later
-	CodeOverloaded    Code = "OVERLOADED"      // load shed; retry later
+	CodeInvalidInput   Code = "INVALID_INPUT"    // validation failed; caller's fault
+	CodeNotFound       Code = "NOT_FOUND"        // entity does not exist
+	CodeConflict       Code = "CONFLICT"         // duplicate / concurrent modification
+	CodeUnavailable    Code = "UNAVAILABLE"      // dependency down, breaker open
+	CodeRateLimited    Code = "RATE_LIMITED"     // throttled; retry later
+	CodeOverloaded     Code = "OVERLOADED"       // load shed; retry later
 	CodeDivisionByZero Code = "DIVISION_BY_ZERO" // permanent computation failure
-	CodeInternal      Code = "INTERNAL"        // bug or unexpected state
+	CodeInternal       Code = "INTERNAL"         // bug or unexpected state
 )
 
 // Error is the single error type that crosses layer boundaries.
