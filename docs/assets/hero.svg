@@ -1,0 +1,127 @@
+<svg width="880" height="300" viewBox="0 0 880 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="distributed.calc — watch math travel through a distributed system">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b0b14"/>
+      <stop offset="100%" stop-color="#12101f"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#7c6cf6"/>
+      <stop offset="100%" stop-color="#22d3ee"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- card -->
+  <rect x="1" y="1" width="878" height="298" rx="18" fill="url(#bg)" stroke="#26263a" stroke-width="2"/>
+
+  <!-- ============ left: wordmark ============ -->
+  <text x="48" y="92" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="44" font-weight="800" fill="#e4e4ef">
+    <tspan fill="#7c6cf6">Σ</tspan> distributed<tspan fill="#7c6cf6">.</tspan>calc
+  </text>
+  <rect x="50" y="108" width="330" height="3" rx="1.5" fill="url(#accent)">
+    <animate attributeName="width" values="0;330;330;330" keyTimes="0;0.15;0.9;1" dur="8s" repeatCount="indefinite"/>
+  </rect>
+
+  <!-- rotating taglines -->
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="15" fill="#8a8aa3">
+    <text x="50" y="146" opacity="0">
+      fan-out → worker pools → fan-in, one trace end to end
+      <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.05;0.30;0.35;1" dur="16s" repeatCount="indefinite"/>
+    </text>
+    <text x="50" y="146" opacity="0">
+      transactional outbox · retry queues · circuit breakers
+      <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.35;0.40;0.63;0.68;1" dur="16s" repeatCount="indefinite"/>
+    </text>
+    <text x="50" y="146" opacity="0">
+      append-only audit · micro-batching · load shedding
+      <animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.68;0.73;0.95;1" dur="16s" repeatCount="indefinite"/>
+    </text>
+  </g>
+
+  <!-- ============ left-bottom: pipeline ============ -->
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#8a8aa3">
+    <path id="pipe" d="M 50 210 H 400" stroke="#26263a" stroke-width="2" fill="none"/>
+    <circle cx="50"  cy="210" r="4" fill="#7c6cf6"/>
+    <circle cx="138" cy="210" r="4" fill="#34d399"/>
+    <circle cx="226" cy="210" r="4" fill="#22d3ee"/>
+    <circle cx="314" cy="210" r="4" fill="#fbbf24"/>
+    <circle cx="400" cy="210" r="4" fill="#f472b6"/>
+    <text x="50"  y="234" text-anchor="middle">browser</text>
+    <text x="138" y="234" text-anchor="middle">nginx</text>
+    <text x="226" y="234" text-anchor="middle">orchestrator</text>
+    <text x="314" y="234" text-anchor="middle">rabbitmq</text>
+    <text x="400" y="234" text-anchor="middle">agents</text>
+    <!-- message packets -->
+    <circle r="3.5" fill="#7c6cf6" filter="url(#glow)">
+      <animateMotion dur="4s" repeatCount="indefinite" path="M 50 210 H 400"/>
+    </circle>
+    <circle r="3.5" fill="#22d3ee" filter="url(#glow)">
+      <animateMotion dur="4s" begin="1.3s" repeatCount="indefinite" path="M 50 210 H 400"/>
+    </circle>
+    <circle r="3.5" fill="#34d399" filter="url(#glow)">
+      <animateMotion dur="4s" begin="2.6s" repeatCount="indefinite" path="M 400 210 H 226"/>
+    </circle>
+    <text x="225" y="262" text-anchor="middle" font-size="11" fill="#3f3f5a">⇢ tasks out · results back ⇠</text>
+  </g>
+
+  <!-- ============ right: living DAG of ((1+2)*(3+4)) ============ -->
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13">
+    <!-- edges -->
+    <path d="M 610 96 C 650 96 650 140 688 140" stroke="#26263a" stroke-width="2" fill="none">
+      <animate attributeName="stroke" values="#26263a;#26263a;#34d399;#34d399;#26263a" keyTimes="0;0.28;0.33;0.9;1" dur="8s" repeatCount="indefinite"/>
+    </path>
+    <path d="M 610 184 C 650 184 650 140 688 140" stroke="#26263a" stroke-width="2" fill="none">
+      <animate attributeName="stroke" values="#26263a;#26263a;#34d399;#34d399;#26263a" keyTimes="0;0.40;0.45;0.9;1" dur="8s" repeatCount="indefinite"/>
+    </path>
+
+    <!-- leaf task: 1+2 -->
+    <g>
+      <rect x="520" y="72" width="90" height="46" rx="10" fill="#12121a" stroke-width="2">
+        <animate attributeName="stroke" values="#8a8aa3;#f59e0b;#34d399;#34d399;#8a8aa3" keyTimes="0;0.08;0.28;0.9;1" dur="8s" repeatCount="indefinite"/>
+      </rect>
+      <text x="565" y="94" text-anchor="middle" fill="#e4e4ef">1 + 2</text>
+      <text x="565" y="110" text-anchor="middle" fill="#34d399" opacity="0">= 3
+        <animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.28;0.33;0.9;1" dur="8s" repeatCount="indefinite"/>
+      </text>
+    </g>
+
+    <!-- leaf task: 3+4 -->
+    <g>
+      <rect x="520" y="160" width="90" height="46" rx="10" fill="#12121a" stroke-width="2">
+        <animate attributeName="stroke" values="#8a8aa3;#8a8aa3;#f59e0b;#34d399;#34d399;#8a8aa3" keyTimes="0;0.15;0.20;0.40;0.9;1" dur="8s" repeatCount="indefinite"/>
+      </rect>
+      <text x="565" y="182" text-anchor="middle" fill="#e4e4ef">3 + 4</text>
+      <text x="565" y="198" text-anchor="middle" fill="#34d399" opacity="0">= 7
+        <animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.40;0.45;0.9;1" dur="8s" repeatCount="indefinite"/>
+      </text>
+    </g>
+
+    <!-- root task: * -->
+    <g>
+      <rect x="688" y="117" width="104" height="46" rx="10" fill="#12121a" stroke-width="2.5">
+        <animate attributeName="stroke" values="#8a8aa3;#8a8aa3;#f59e0b;#34d399;#8a8aa3" keyTimes="0;0.45;0.50;0.70;1" dur="8s" repeatCount="indefinite"/>
+      </rect>
+      <text x="740" y="139" text-anchor="middle" fill="#e4e4ef">3 × 7</text>
+      <text x="740" y="155" text-anchor="middle" fill="#34d399" font-weight="700" opacity="0">= 21
+        <animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.70;0.75;0.92;1" dur="8s" repeatCount="indefinite"/>
+      </text>
+      <text x="740" y="106" text-anchor="middle" font-size="11" fill="#7c6cf6">★ root</text>
+    </g>
+
+    <!-- worker attribution blips -->
+    <text x="490" y="95" text-anchor="end" font-size="10" fill="#f472b6" opacity="0">agent-1
+      <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.10;0.26;0.30;1" dur="8s" repeatCount="indefinite"/>
+    </text>
+    <text x="490" y="183" text-anchor="end" font-size="10" fill="#f472b6" opacity="0">agent-2
+      <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.20;0.25;0.38;0.42;1" dur="8s" repeatCount="indefinite"/>
+    </text>
+  </g>
+
+  <!-- trace id ticker -->
+  <text x="832" y="282" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" fill="#3f3f5a">
+    trace 2f68ea3ed46c5c0c… · 8 spans · 2 services · one click
+  </text>
+</svg>
