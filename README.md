@@ -68,6 +68,10 @@ with operator redrive, circuit breakers, bulkheads, rate limits, load shedding, 
 
 ## 🏗 Architecture
 
+<div align="center">
+<img src="docs/assets/pipeline.svg" alt="Animated pipeline: tasks fan out browser → nginx → orchestrator → rabbitmq → agents on the solid rail; results fan back in on the dashed rail" width="880"/>
+</div>
+
 ```mermaid
 flowchart LR
     subgraph edge [" 🌐 edge "]

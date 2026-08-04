@@ -1,0 +1,60 @@
+<svg width="880" height="150" viewBox="0 0 880 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Messages flowing browser → nginx → orchestrator → rabbitmq → agents, results flowing back">
+  <defs>
+    <linearGradient id="pbg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b0b14"/>
+      <stop offset="100%" stop-color="#12101f"/>
+    </linearGradient>
+    <filter id="pglow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect x="1" y="1" width="878" height="148" rx="16" fill="url(#pbg)" stroke="#26263a" stroke-width="2"/>
+
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" fill="#8a8aa3">
+    <!-- rails -->
+    <path d="M 90 62 H 790" stroke="#26263a" stroke-width="2" fill="none"/>
+    <path d="M 790 96 H 430" stroke="#26263a" stroke-width="1.5" stroke-dasharray="4 5" fill="none"/>
+
+    <!-- stations -->
+    <circle cx="90"  cy="62" r="5" fill="#7c6cf6"/>
+    <circle cx="265" cy="62" r="5" fill="#34d399"/>
+    <circle cx="440" cy="62" r="5" fill="#22d3ee"/>
+    <circle cx="615" cy="62" r="5" fill="#fbbf24"/>
+    <circle cx="790" cy="62" r="5" fill="#f472b6"/>
+
+    <text x="90"  y="40" text-anchor="middle" fill="#e4e4ef">browser</text>
+    <text x="265" y="40" text-anchor="middle" fill="#e4e4ef">nginx</text>
+    <text x="440" y="40" text-anchor="middle" fill="#e4e4ef">orchestrator ×3</text>
+    <text x="615" y="40" text-anchor="middle" fill="#e4e4ef">rabbitmq</text>
+    <text x="790" y="40" text-anchor="middle" fill="#e4e4ef">agents ×N</text>
+
+    <text x="90"  y="86" text-anchor="middle" font-size="10" fill="#3f3f5a">OTel root span</text>
+    <text x="265" y="86" text-anchor="middle" font-size="10" fill="#3f3f5a">least_conn</text>
+    <text x="440" y="86" text-anchor="middle" font-size="10" fill="#3f3f5a">outbox relay</text>
+    <text x="615" y="86" text-anchor="middle" font-size="10" fill="#3f3f5a">quorum · retry · dlq</text>
+    <text x="790" y="86" text-anchor="middle" font-size="10" fill="#3f3f5a">worker pools</text>
+
+    <!-- tasks flowing out -->
+    <circle r="4" fill="#7c6cf6" filter="url(#pglow)">
+      <animateMotion dur="4.5s" repeatCount="indefinite" path="M 90 62 H 790"/>
+    </circle>
+    <circle r="4" fill="#22d3ee" filter="url(#pglow)">
+      <animateMotion dur="4.5s" begin="1.5s" repeatCount="indefinite" path="M 90 62 H 790"/>
+    </circle>
+    <circle r="4" fill="#fbbf24" filter="url(#pglow)">
+      <animateMotion dur="4.5s" begin="3s" repeatCount="indefinite" path="M 90 62 H 790"/>
+    </circle>
+
+    <!-- results flowing back on the dashed rail -->
+    <circle r="4" fill="#34d399" filter="url(#pglow)">
+      <animateMotion dur="3.5s" begin="2.2s" repeatCount="indefinite" path="M 790 96 H 440"/>
+    </circle>
+    <circle r="4" fill="#34d399" filter="url(#pglow)">
+      <animateMotion dur="3.5s" begin="4s" repeatCount="indefinite" path="M 790 96 H 440"/>
+    </circle>
+
+    <text x="440" y="128" text-anchor="middle" font-size="11" fill="#3f3f5a">⇢ tasks fan out on the solid rail · results fan back in on the dashed one ⇠</text>
+  </g>
+</svg>
