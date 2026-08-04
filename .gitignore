@@ -1,0 +1,19 @@
+# IDE
+.idea/
+.vscode/
+
+# Binaries & build output
+bin/
+dist/
+
+# Env
+.env
+*.local
+
+# Test artifacts
+coverage.out
+*.test
+
+# Node
+node_modules/
+.next/
