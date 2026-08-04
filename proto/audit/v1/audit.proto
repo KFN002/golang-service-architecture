@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+package audit.v1;
+
+option go_package = "github.com/KFN002/perfect-go-service/gen/audit/v1;auditv1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
+
+// AuditService is the API of the append-only audit-log microservice.
+service AuditService {
+  // WriteEvents ingests a batch synchronously. Rate-limited and load-shed:
+  // callers must be prepared for RESOURCE_EXHAUSTED. The asynchronous AMQP
+  // path is preferred for internal producers.
+  rpc WriteEvents(WriteEventsRequest) returns (WriteEventsResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/audit/events"
+      body: "*"
+    };
+  }
+
+  // QueryEvents pages through the log with keyset cursors (newest first).
+  rpc QueryEvents(QueryEventsRequest) returns (QueryEventsResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/audit/events"
+    };
+  }
+
+  rpc GetStats(GetStatsRequest) returns (AuditStats) {
+    option (google.api.http) = {
+      get: "/api/v1/audit/stats"
+    };
+  }
+}
+
+message AuditEvent {
+  string id = 1;
+  google.protobuf.Timestamp occurred_at = 2;
+  string event_type = 3;
+  string service = 4;
+  string entity_type = 5;
+  string entity_id = 6;
+  string trace_id = 7;
+  string actor = 8;
+  google.protobuf.Struct payload = 9;
+}
+
+message WriteEventsRequest {
+  repeated AuditEvent events = 1;
+}
+
+message WriteEventsResponse {
+  int32 accepted = 1;
+  int32 deduplicated = 2;
+}
+
+message QueryEventsRequest {
+  google.protobuf.Timestamp from = 1;
+  google.protobuf.Timestamp to = 2;
+  string event_type = 3;
+  string entity_type = 4;
+  string entity_id = 5;
+  string trace_id = 6;
+  int32 page_size = 7;
+  // Keyset cursor from the previous page; empty for the first page.
+  google.protobuf.Timestamp cursor_ts = 8;
+  string cursor_id = 9;
+}
+
+message QueryEventsResponse {
+  repeated AuditEvent events = 1;
+  google.protobuf.Timestamp next_cursor_ts = 2;
+  string next_cursor_id = 3;
+}
+
+message GetStatsRequest {}
+
+message AuditStats {
+  int64 total = 1;
+  map<string, int64> by_type = 2;
+  int64 ingest_last_minute = 3;
+}

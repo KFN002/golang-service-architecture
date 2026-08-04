@@ -1,0 +1,356 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "calc/v1/expression.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "ExpressionService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/expressions": {
+      "get": {
+        "operationId": "ExpressionService_ListExpressions",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListExpressionsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "ExpressionService"
+        ]
+      },
+      "post": {
+        "summary": "SubmitExpression validates, plans and enqueues an expression for\ndistributed evaluation. Returns the created expression immediately;\ncompletion is observed via GetExpression, WatchExpression or SSE.",
+        "operationId": "ExpressionService_SubmitExpression",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Expression"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1SubmitExpressionRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ExpressionService"
+        ]
+      }
+    },
+    "/api/v1/expressions/{id}": {
+      "get": {
+        "operationId": "ExpressionService_GetExpression",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Expression"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ExpressionService"
+        ]
+      }
+    },
+    "/api/v1/expressions/{id}/graph": {
+      "get": {
+        "summary": "GetTaskGraph returns the full task DAG of an expression for visualization.",
+        "operationId": "ExpressionService_GetTaskGraph",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1TaskGraph"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ExpressionService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1Expression": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "raw": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/definitions/v1ExpressionStatus"
+        },
+        "hasResult": {
+          "type": "boolean"
+        },
+        "result": {
+          "type": "number",
+          "format": "double"
+        },
+        "error": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "doneAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "progress": {
+          "$ref": "#/definitions/v1Progress"
+        }
+      }
+    },
+    "v1ExpressionStatus": {
+      "type": "string",
+      "enum": [
+        "EXPRESSION_STATUS_UNSPECIFIED",
+        "EXPRESSION_STATUS_PENDING",
+        "EXPRESSION_STATUS_IN_PROGRESS",
+        "EXPRESSION_STATUS_DONE",
+        "EXPRESSION_STATUS_FAILED"
+      ],
+      "default": "EXPRESSION_STATUS_UNSPECIFIED"
+    },
+    "v1ListExpressionsResponse": {
+      "type": "object",
+      "properties": {
+        "expressions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Expression"
+          }
+        },
+        "total": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "v1Progress": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "done": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "v1SubmitExpressionRequest": {
+      "type": "object",
+      "properties": {
+        "raw": {
+          "type": "string"
+        }
+      }
+    },
+    "v1TaskGraph": {
+      "type": "object",
+      "properties": {
+        "expressionId": {
+          "type": "string"
+        },
+        "tasks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1TaskNode"
+          }
+        }
+      }
+    },
+    "v1TaskNode": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "op": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/definitions/v1TaskStatus"
+        },
+        "hasArg1Value": {
+          "type": "boolean"
+        },
+        "arg1Value": {
+          "type": "number",
+          "format": "double"
+        },
+        "arg1TaskId": {
+          "type": "string"
+        },
+        "hasArg2Value": {
+          "type": "boolean"
+        },
+        "arg2Value": {
+          "type": "number",
+          "format": "double"
+        },
+        "arg2TaskId": {
+          "type": "string"
+        },
+        "hasResult": {
+          "type": "boolean"
+        },
+        "result": {
+          "type": "number",
+          "format": "double"
+        },
+        "workerId": {
+          "type": "string"
+        },
+        "attempt": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "isRoot": {
+          "type": "boolean"
+        },
+        "queuedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "finishedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "v1TaskStatus": {
+      "type": "string",
+      "enum": [
+        "TASK_STATUS_UNSPECIFIED",
+        "TASK_STATUS_PENDING",
+        "TASK_STATUS_READY",
+        "TASK_STATUS_RUNNING",
+        "TASK_STATUS_DONE",
+        "TASK_STATUS_FAILED"
+      ],
+      "default": "TASK_STATUS_UNSPECIFIED"
+    }
+  }
+}

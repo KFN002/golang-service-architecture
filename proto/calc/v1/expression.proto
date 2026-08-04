@@ -1,0 +1,122 @@
+syntax = "proto3";
+
+package calc.v1;
+
+option go_package = "github.com/KFN002/perfect-go-service/gen/calc/v1;calcv1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+// ExpressionService is the public API of the orchestrator.
+service ExpressionService {
+  // SubmitExpression validates, plans and enqueues an expression for
+  // distributed evaluation. Returns the created expression immediately;
+  // completion is observed via GetExpression, WatchExpression or SSE.
+  rpc SubmitExpression(SubmitExpressionRequest) returns (Expression) {
+    option (google.api.http) = {
+      post: "/api/v1/expressions"
+      body: "*"
+    };
+  }
+
+  rpc GetExpression(GetExpressionRequest) returns (Expression) {
+    option (google.api.http) = {
+      get: "/api/v1/expressions/{id}"
+    };
+  }
+
+  rpc ListExpressions(ListExpressionsRequest) returns (ListExpressionsResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/expressions"
+    };
+  }
+
+  // GetTaskGraph returns the full task DAG of an expression for visualization.
+  rpc GetTaskGraph(GetExpressionRequest) returns (TaskGraph) {
+    option (google.api.http) = {
+      get: "/api/v1/expressions/{id}/graph"
+    };
+  }
+
+  // WatchExpression streams state changes until the expression finishes.
+  // gRPC parity of the HTTP SSE endpoint.
+  rpc WatchExpression(GetExpressionRequest) returns (stream Expression);
+}
+
+message SubmitExpressionRequest {
+  string raw = 1;
+}
+
+message GetExpressionRequest {
+  string id = 1;
+}
+
+message ListExpressionsRequest {
+  int32 page_size = 1;
+  int32 page = 2;
+}
+
+message ListExpressionsResponse {
+  repeated Expression expressions = 1;
+  int64 total = 2;
+}
+
+enum ExpressionStatus {
+  EXPRESSION_STATUS_UNSPECIFIED = 0;
+  EXPRESSION_STATUS_PENDING = 1;
+  EXPRESSION_STATUS_IN_PROGRESS = 2;
+  EXPRESSION_STATUS_DONE = 3;
+  EXPRESSION_STATUS_FAILED = 4;
+}
+
+message Expression {
+  string id = 1;
+  string raw = 2;
+  ExpressionStatus status = 3;
+  bool has_result = 4;
+  double result = 5;
+  string error = 6;
+  string trace_id = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp done_at = 9;
+  Progress progress = 10;
+}
+
+message Progress {
+  int32 total = 1;
+  int32 done = 2;
+}
+
+enum TaskStatus {
+  TASK_STATUS_UNSPECIFIED = 0;
+  TASK_STATUS_PENDING = 1;
+  TASK_STATUS_READY = 2;
+  TASK_STATUS_RUNNING = 3;
+  TASK_STATUS_DONE = 4;
+  TASK_STATUS_FAILED = 5;
+}
+
+message TaskNode {
+  string id = 1;
+  string op = 2;
+  TaskStatus status = 3;
+  bool has_arg1_value = 4;
+  double arg1_value = 5;
+  string arg1_task_id = 6;
+  bool has_arg2_value = 7;
+  double arg2_value = 8;
+  string arg2_task_id = 9;
+  bool has_result = 10;
+  double result = 11;
+  string worker_id = 12;
+  int32 attempt = 13;
+  bool is_root = 14;
+  google.protobuf.Timestamp queued_at = 15;
+  google.protobuf.Timestamp started_at = 16;
+  google.protobuf.Timestamp finished_at = 17;
+}
+
+message TaskGraph {
+  string expression_id = 1;
+  repeated TaskNode tasks = 2;
+}

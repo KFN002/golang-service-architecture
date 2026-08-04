@@ -17,3 +17,4 @@ coverage.out
 # Node
 node_modules/
 .next/
+bin/
