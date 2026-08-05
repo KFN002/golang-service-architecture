@@ -341,6 +341,8 @@ make run-orchestrator ; make run-agent ; make run-audit ; make web-dev
 
 **Apache-2.0** · built with ❤, goroutines, and an unreasonable number of well-named packages
 
+Enhanced by Claude Fable 5
+
 *If this repo taught you something, a ⭐ helps the next person find it.*
 
 </div>
