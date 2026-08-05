@@ -12,7 +12,7 @@ transactional outbox, audited immutably in a separate microservice, and traced
 <br/>
 
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go&logoColor=white)](backend/go.mod)
-[![Fiber](https://img.shields.io/badge/Fiber-v3-7c6cf6)](https://gofiber.io)
+[![Fiber](https://img.shields.io/badge/Fiber-v3-00ADD8)](https://gofiber.io)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-4169E1?logo=postgresql&logoColor=white)](deploy/docker-compose.yml)
 [![Redis](https://img.shields.io/badge/Redis-8_·_rueidis-DC382D?logo=redis&logoColor=white)](backend/pkg/redis)
 [![RabbitMQ](https://img.shields.io/badge/RabbitMQ-4_quorum-FF6600?logo=rabbitmq&logoColor=white)](backend/pkg/rabbitmq)
@@ -73,28 +73,29 @@ with operator redrive, circuit breakers, bulkheads, rate limits, load shedding, 
 </div>
 
 ```mermaid
+%%{init: {'theme':'dark','themeVariables':{'primaryColor':'#12121a','primaryBorderColor':'#00add8','primaryTextColor':'#e4e4ef','lineColor':'#5dc9e2','clusterBkg':'#0b0b14','clusterBorder':'#26263a','edgeLabelBackground':'#12121a'}}}%%
 flowchart LR
     subgraph edge [" 🌐 edge "]
-        B["browser<br/><i>OTel Web SDK</i>"] --> N["nginx<br/><i>least_conn · limit_req</i>"]
+        B["browser<br/>OTel Web SDK"] --> N["nginx<br/>least_conn · limit_req"]
     end
 
     subgraph app [" ⚙️ application plane "]
-        N --> O1["orchestrator ×3<br/><i>Fiber v3 + grpc-gateway</i>"]
-        O1 -->|"outbox relay<br/>SKIP LOCKED"| MQ[("RabbitMQ 4<br/><i>quorum · retry · DLQ</i>")]
-        MQ -->|tasks| A1["agent ×N<br/><i>auto-scaling pools</i>"]
+        N --> O1["orchestrator ×3<br/>Fiber v3 + grpc-gateway"]
+        O1 -->|"outbox relay<br/>SKIP LOCKED"| MQ[("RabbitMQ 4<br/>quorum · retry · DLQ")]
+        MQ -->|tasks| A1["agent ×N<br/>auto-scaling pools"]
         A1 -->|results| MQ
         MQ -->|fan-in| O1
     end
 
     subgraph data [" 💾 data plane "]
-        O1 --- PG[("PostgreSQL 18<br/><i>DAG + outbox</i>")]
-        O1 --- R[("Redis 8<br/><i>pub/sub → SSE</i>")]
+        O1 --- PG[("PostgreSQL 18<br/>DAG + outbox")]
+        O1 --- R[("Redis 8<br/>pub/sub → SSE")]
     end
 
     subgraph audit [" 📜 audit microservice "]
-        MQ -->|"audit.exchange"| AU["audit ×2<br/><i>bulkhead → batcher</i>"]
-        AU --- APG[("audit PG18<br/><i>append-only, partitioned</i>")]
-        AU --- AR[("audit Redis<br/><i>dedup · query cache</i>")]
+        MQ -->|"audit.exchange"| AU["audit ×2<br/>bulkhead → batcher"]
+        AU --- APG[("audit PG18<br/>append-only, partitioned")]
+        AU --- AR[("audit Redis<br/>dedup · query cache")]
     end
 
     subgraph obs [" 🔭 telemetry plane "]
@@ -105,16 +106,20 @@ flowchart LR
     B -.->|OTLP/HTTP| OC
     O1 & A1 & AU -.->|OTLP/gRPC| OC
 
-    style B fill:#1a1a26,stroke:#7c6cf6,color:#e4e4ef
-    style N fill:#1a1a26,stroke:#34d399,color:#e4e4ef
-    style O1 fill:#1a1a26,stroke:#22d3ee,color:#e4e4ef
-    style A1 fill:#1a1a26,stroke:#f472b6,color:#e4e4ef
-    style AU fill:#1a1a26,stroke:#60a5fa,color:#e4e4ef
-    style MQ fill:#1a1a26,stroke:#fbbf24,color:#e4e4ef
-    style PG fill:#1a1a26,stroke:#8a8aa3,color:#e4e4ef
-    style APG fill:#1a1a26,stroke:#8a8aa3,color:#e4e4ef
-    style R fill:#1a1a26,stroke:#8a8aa3,color:#e4e4ef
-    style AR fill:#1a1a26,stroke:#8a8aa3,color:#e4e4ef
+    style B fill:#12121a,stroke:#00add8,color:#e4e4ef
+    style N fill:#12121a,stroke:#00a29c,color:#e4e4ef
+    style O1 fill:#12121a,stroke:#5dc9e2,color:#e4e4ef
+    style A1 fill:#12121a,stroke:#ce3262,color:#e4e4ef
+    style AU fill:#12121a,stroke:#007d9c,color:#e4e4ef
+    style MQ fill:#12121a,stroke:#fddd00,color:#e4e4ef
+    style PG fill:#12121a,stroke:#8a8aa3,color:#e4e4ef
+    style APG fill:#12121a,stroke:#8a8aa3,color:#e4e4ef
+    style R fill:#12121a,stroke:#8a8aa3,color:#e4e4ef
+    style AR fill:#12121a,stroke:#8a8aa3,color:#e4e4ef
+    style OC fill:#12121a,stroke:#8a8aa3,color:#e4e4ef
+    style J fill:#12121a,stroke:#8a8aa3,color:#e4e4ef
+    style P fill:#12121a,stroke:#8a8aa3,color:#e4e4ef
+    style G fill:#12121a,stroke:#8a8aa3,color:#e4e4ef
 ```
 
 ## 🔄 Life of an expression

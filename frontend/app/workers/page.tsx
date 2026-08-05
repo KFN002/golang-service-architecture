@@ -12,7 +12,7 @@ import { api, type AuditEvent } from "@/lib/api";
 import { Card, Stat } from "@/components/ui";
 import { fmtTime } from "@/lib/utils";
 
-const lineColors = ["#7c6cf6", "#22d3ee", "#f472b6", "#34d399", "#fbbf24"];
+const lineColors = ["#00add8", "#5dc9e2", "#ce3262", "#00a29c", "#fddd00"]; // Go brand palette
 
 export default function WorkersPage() {
   const [events, setEvents] = useState<AuditEvent[]>([]);

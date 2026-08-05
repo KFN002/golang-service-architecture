@@ -18,11 +18,11 @@
     <path d="M 790 96 H 430" stroke="#26263a" stroke-width="1.5" stroke-dasharray="4 5" fill="none"/>
 
     <!-- stations -->
-    <circle cx="90"  cy="62" r="5" fill="#7c6cf6"/>
+    <circle cx="90"  cy="62" r="5" fill="#00add8"/>
     <circle cx="265" cy="62" r="5" fill="#34d399"/>
-    <circle cx="440" cy="62" r="5" fill="#22d3ee"/>
+    <circle cx="440" cy="62" r="5" fill="#5dc9e2"/>
     <circle cx="615" cy="62" r="5" fill="#fbbf24"/>
-    <circle cx="790" cy="62" r="5" fill="#f472b6"/>
+    <circle cx="790" cy="62" r="5" fill="#ce3262"/>
 
     <text x="90"  y="40" text-anchor="middle" fill="#e4e4ef">browser</text>
     <text x="265" y="40" text-anchor="middle" fill="#e4e4ef">nginx</text>
@@ -37,10 +37,10 @@
     <text x="790" y="86" text-anchor="middle" font-size="10" fill="#3f3f5a">worker pools</text>
 
     <!-- tasks flowing out -->
-    <circle r="4" fill="#7c6cf6" filter="url(#pglow)">
+    <circle r="4" fill="#00add8" filter="url(#pglow)">
       <animateMotion dur="4.5s" repeatCount="indefinite" path="M 90 62 H 790"/>
     </circle>
-    <circle r="4" fill="#22d3ee" filter="url(#pglow)">
+    <circle r="4" fill="#5dc9e2" filter="url(#pglow)">
       <animateMotion dur="4.5s" begin="1.5s" repeatCount="indefinite" path="M 90 62 H 790"/>
     </circle>
     <circle r="4" fill="#fbbf24" filter="url(#pglow)">

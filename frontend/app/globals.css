@@ -8,13 +8,13 @@
   --border: #26263a;
   --foreground: #e4e4ef;
   --muted: #8a8aa3;
-  --accent: #7c6cf6;
-  --accent-soft: rgba(124, 108, 246, 0.14);
+  --accent: #00add8;        /* Gopher Blue */
+  --accent-soft: rgba(0, 173, 216, 0.14);
   --ok: #34d399;
   --warn: #fbbf24;
   --err: #f87171;
   --run: #f59e0b;
-  --cyan: #22d3ee;
+  --cyan: #5dc9e2;          /* Go Light Blue */
 }
 
 @theme inline {

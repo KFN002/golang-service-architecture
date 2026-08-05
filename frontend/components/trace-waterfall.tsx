@@ -9,11 +9,11 @@ import { api, type JaegerTrace, type JaegerSpan } from "@/lib/api";
 import { fmtMs } from "@/lib/utils";
 
 const serviceColors: Record<string, string> = {
-  "web-browser": "var(--accent)",
-  web: "#a78bfa",
-  orchestrator: "var(--cyan)",
-  agent: "#f472b6",
-  audit: "#60a5fa",
+  "web-browser": "#00add8", // Gopher Blue
+  web: "#007d9c", // Go deep blue
+  orchestrator: "#5dc9e2", // Go Light Blue
+  agent: "#ce3262", // Go Fuchsia
+  audit: "#00a29c", // Go Aqua
 };
 
 interface Row {

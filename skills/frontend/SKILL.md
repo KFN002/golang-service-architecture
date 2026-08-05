@@ -57,7 +57,7 @@ whole route.
   --border: #26263a;
   --foreground: #e4e4ef;
   --muted: #8a8aa3;
-  --accent: #7c6cf6;
+  --accent: #00add8;        /* Gopher Blue */
   --ok: #34d399;  --warn: #fbbf24;  --err: #f87171;  --run: #f59e0b;
 }
 
