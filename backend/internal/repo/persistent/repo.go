@@ -22,6 +22,8 @@ import (
 	"github.com/KFN002/perfect-go-service/pkg/otel"
 )
 
+const eventKindTaskUpdated = "task.updated"
+
 // Repo implements expression.Store and scheduler.Store over pgx.
 type Repo struct {
 	pool *pgxpool.Pool
@@ -206,7 +208,7 @@ func (r *Repo) ApplyResult(ctx context.Context, res messages.ResultMessage, audi
 
 		now := nowUTC()
 		events = append(events, messages.Event{
-			Kind: "task.updated", ExpressionID: res.ExpressionID, TaskID: &res.TaskID,
+			Kind: eventKindTaskUpdated, ExpressionID: res.ExpressionID, TaskID: &res.TaskID,
 			Status: string(entity.TaskDone), Result: &res.Result, WorkerID: res.WorkerID, At: now,
 		})
 
@@ -273,7 +275,7 @@ func (r *Repo) ApplyFailure(ctx context.Context, res messages.ResultMessage, aud
 		now := nowUTC()
 		events = append(events,
 			messages.Event{
-				Kind: "task.updated", ExpressionID: res.ExpressionID, TaskID: &res.TaskID,
+				Kind: eventKindTaskUpdated, ExpressionID: res.ExpressionID, TaskID: &res.TaskID,
 				Status: string(entity.TaskFailed), Error: res.Error, WorkerID: res.WorkerID, At: now,
 			},
 			messages.Event{
@@ -391,7 +393,7 @@ func unlockReadyDependents(ctx context.Context, q *sqlcgen.Queries,
 			return nil, err
 		}
 		events = append(events, messages.Event{
-			Kind: "task.updated", ExpressionID: exprID, TaskID: &t.ID,
+			Kind: eventKindTaskUpdated, ExpressionID: exprID, TaskID: &t.ID,
 			Status: string(entity.TaskReady), At: now,
 		})
 	}

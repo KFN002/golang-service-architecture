@@ -13,7 +13,7 @@ SHELL := /bin/bash
 SQLC    := go run github.com/sqlc-dev/sqlc/cmd/sqlc@v1.30.0
 BUF     := go run github.com/bufbuild/buf/cmd/buf@v1.57.2
 GOOSE   := go run github.com/pressly/goose/v3/cmd/goose@v3.26.0
-LINT    := go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.6.2
+LINT    := go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
 VULN    := go run golang.org/x/vuln/cmd/govulncheck@latest
 
 PG_DSN       ?= postgres://calc:calcpass@localhost:5432/calc?sslmode=disable

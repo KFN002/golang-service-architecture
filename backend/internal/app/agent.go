@@ -23,6 +23,8 @@ import (
 	"github.com/KFN002/perfect-go-service/pkg/workerpool"
 )
 
+const jsonKeyStatus = "status"
+
 // RunAgent boots one agent replica and blocks until shutdown.
 func RunAgent(cfg config.Agent) error {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -79,12 +81,12 @@ func RunAgent(cfg config.Agent) error {
 	// Minimal HTTP surface: liveness + metrics only.
 	app := fiber.New(fiber.Config{AppName: constants.ServiceAgent})
 	app.Use(recover.New())
-	app.Get("/healthz", func(c fiber.Ctx) error { return c.JSON(fiber.Map{"status": "ok"}) })
+	app.Get("/healthz", func(c fiber.Ctx) error { return c.JSON(fiber.Map{jsonKeyStatus: "ok"}) })
 	app.Get("/readyz", func(c fiber.Ctx) error {
 		if err := mq.Ping(); err != nil {
-			return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"status": "degraded"})
+			return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{jsonKeyStatus: "degraded"})
 		}
-		return c.JSON(fiber.Map{"status": "ready"})
+		return c.JSON(fiber.Map{jsonKeyStatus: "ready"})
 	})
 	app.Get("/metrics", adaptor.HTTPHandler(promhttp.Handler()))
 

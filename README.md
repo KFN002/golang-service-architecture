@@ -11,7 +11,7 @@ transactional outbox, audited immutably in a separate microservice, and traced
 
 <br/>
 
-[![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go&logoColor=white)](backend/go.mod)
+[![Go](https://img.shields.io/badge/Go-1.27-00ADD8?logo=go&logoColor=white)](backend/go.mod)
 [![Fiber](https://img.shields.io/badge/Fiber-v3-00ADD8)](https://gofiber.io)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-4169E1?logo=postgresql&logoColor=white)](deploy/docker-compose.yml)
 [![Redis](https://img.shields.io/badge/Redis-8_·_rueidis-DC382D?logo=redis&logoColor=white)](backend/pkg/redis)

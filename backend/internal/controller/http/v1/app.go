@@ -26,6 +26,11 @@ import (
 	"github.com/KFN002/perfect-go-service/pkg/ratelimit"
 )
 
+const (
+	jsonKeyStatus = "status"
+	jsonKeyCode   = "code"
+)
+
 // ReadinessCheck probes one dependency.
 type ReadinessCheck struct {
 	Name  string
@@ -66,17 +71,17 @@ func newApp(cfg AppConfig) *fiber.App {
 
 func registerHealth(app *fiber.App, checks []ReadinessCheck) {
 	app.Get("/healthz", func(c fiber.Ctx) error {
-		return c.JSON(fiber.Map{"status": "ok"})
+		return c.JSON(fiber.Map{jsonKeyStatus: "ok"})
 	})
 	app.Get("/readyz", func(c fiber.Ctx) error {
 		for _, chk := range checks {
 			if err := chk.Check(c.Context()); err != nil {
 				return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
-					"status": "degraded", "failing": chk.Name,
+					jsonKeyStatus: "degraded", "failing": chk.Name,
 				})
 			}
 		}
-		return c.JSON(fiber.Map{"status": "ready"})
+		return c.JSON(fiber.Map{jsonKeyStatus: "ready"})
 	})
 	app.Get("/metrics", adaptor.HTTPHandler(promhttp.Handler()))
 }
@@ -122,11 +127,11 @@ func registerDLQ(app *fiber.App, mq *rabbitmq.Client, pub *rabbitmq.Publisher) {
 	app.Get("/api/v1/dlq/:flow", func(c fiber.Ctx) error {
 		flow, ok := flows[c.Params("flow")]
 		if !ok {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"code": "NOT_FOUND"})
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{jsonKeyCode: "NOT_FOUND"})
 		}
 		items, err := mq.InspectDLQ(flow, 50)
 		if err != nil {
-			return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"code": "UNAVAILABLE"})
+			return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{jsonKeyCode: "UNAVAILABLE"})
 		}
 		out := make([]fiber.Map, 0, len(items))
 		for _, it := range items {
@@ -142,11 +147,11 @@ func registerDLQ(app *fiber.App, mq *rabbitmq.Client, pub *rabbitmq.Publisher) {
 	app.Post("/api/v1/dlq/:flow/requeue", func(c fiber.Ctx) error {
 		flow, ok := flows[c.Params("flow")]
 		if !ok {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"code": "NOT_FOUND"})
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{jsonKeyCode: "NOT_FOUND"})
 		}
 		moved, err := mq.RequeueDLQ(c.Context(), flow, pub, 100)
 		if err != nil {
-			return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"code": "UNAVAILABLE"})
+			return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{jsonKeyCode: "UNAVAILABLE"})
 		}
 		return c.JSON(fiber.Map{"requeued": moved})
 	})

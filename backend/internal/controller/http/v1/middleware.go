@@ -33,8 +33,8 @@ func RateLimit(limiter *ratelimit.Limiter) fiber.Handler {
 		if !limiter.Allow(clientIP(c)) {
 			c.Set("Retry-After", "1")
 			return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
-				"code":    "RATE_LIMITED",
-				"message": "rate limit exceeded, retry later",
+				jsonKeyCode: "RATE_LIMITED",
+				"message":   "rate limit exceeded, retry later",
 			})
 		}
 		return c.Next()
